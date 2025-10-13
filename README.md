@@ -3,7 +3,7 @@
 
  # ⚓ Anchor
 
-A powerful workflow tool to streamline development with ease.
+A powerful environment tool to streamline development with ease.
 
 Anchor automates the entire CI/CD pipeline, building, configuring,
 and deploying your application into a dedicated developer or staging environment.
@@ -23,22 +23,22 @@ Anchor uses a single configuration file paired with a powerful CLI tool, in orde
 ### Configuration File
 
 Create a file named `Anchorfile` in the root of your project. This file specifies **where** and **how** to deploy.
-It uses a [HCLv2](https://github.com/hashicorp/hcl) syntax, which provides a robust way to configure workflows.
+It uses a [HCLv2](https://github.com/hashicorp/hcl) syntax, which provides a robust way to configure environments.
 
 ### Environments
 
 Anchor configuration is built using a root block named `environment`, which defines a series of `processes`.
-Each workflow is defined using a name and an optional description.
+Each environment is defined using a name and an optional description.
 ```
-workflow "my-great-workflow" {
-    description = "This workflow does a lot of things!"
+environment "my-great-env" {
+    description = "This environment does a lot of things!"
     
     ... ... {
         ...
     }
 }
 
-workflow "my-second-workflow" {
+environment "my-second-env" {
     ...
 }
 ```
@@ -87,7 +87,7 @@ service "generic-service" {
 
 ### Complete Example
 
-This example features a fully-written Anchorfile. The file specifies a workflow for running a website dev environment.
+This example features a fully-written Anchorfile. The file specifies a dev environment for fullstack website.
 ```hcl
 environment "dev" {
     description = "Starts backend, frontend and a mysql database"
@@ -130,5 +130,5 @@ environment "dev" {
 ```
 
 ## Running
-Once configuration is complete, the powerful CLI can be used to execute the workflow.\
+Once configuration is complete, the powerful CLI can be used to execute the environments.\
 To launch an environment's services, execute the command: `anchor apply <environment>`.
