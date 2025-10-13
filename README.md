@@ -65,12 +65,12 @@ Tasks may receive the following attributes:
 #### Services
 Services may receive the following attributes:
 
-| Attribute    | Type         | Required | Description                                                        |
-|--------------|--------------|----------|--------------------------------------------------------------------|
-| engine       | string       | true     | What engine should the command use (e.g: docker, shell).           |
-| depends_on   | list(string) | false    | See Tasks Above                                                    |
-| health_check | block        | true     | Defines the criteria for confirming that a service is operational. |
-For more information about a specific engine, check out [Anchor Engines](docs/engines.md).
+| Attribute    | Type         | Required | Description                                                                                                                                         |
+|--------------|--------------|----------|-----------------------------------------------------------------------------------------------------------------------------------------------------|
+| engine       | string       | true     | What engine should the command use (e.g: docker, shell). For more information about a specific engine, check out [Anchor Engines](docs/engines.md). |
+| depends_on   | list(string) | false    | See Tasks Above                                                                                                                                     |
+| health_check | block        | true     | Defines the criteria for confirming that a service is operational.                                                                                  |
+
 
 
 ##### health_check
