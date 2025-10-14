@@ -6,22 +6,27 @@ type Config struct {
 type Environment struct {
 	Name        string `hcl:"name,label"`
 	Description string `hcl:"description"`
-}
 
-type ProcessBlock struct {
-	DependsOn []string `hcl:"depends_on"`
+	// Processes
+	Services []Service `hcl:"service,block"`
+	Tasks    []Task    `hcl:"task,block"`
 }
 
 type Service struct {
-	ProcessBlock
-	Name   string `hcl:"name,label"`
-	Engine string `hcl:"engine"`
+	Name        string      `hcl:"name,label"`
+	Engine      string      `hcl:"engine"`
+	HealthCheck HealthCheck `hcl:"health_check,block"`
+	DependsOn   []string    `hcl:"depends_on,optional"`
+
+	// Engine dependent
+	Image   *string `hcl:"image"`
+	Command *string `hcl:"command"`
 }
 
 type Task struct {
-	ProcessBlock
-	Name    string `hcl:"name,label"`
-	Command string `hcl:"command"`
+	Name      string   `hcl:"name,label"`
+	Command   string   `hcl:"command"`
+	DependsOn []string `hcl:"depends_on,optional"`
 }
 
 type HealthCheck struct {
@@ -29,7 +34,7 @@ type HealthCheck struct {
 	Target         string `hcl:"target"`
 
 	// Optional
-	Timeout *string `hcl:"timeout,optional"`
+	Timeout *string `hcl:"timeout"`
 }
 
 type Loader interface {
