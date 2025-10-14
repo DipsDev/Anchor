@@ -33,5 +33,5 @@ type HealthCheck struct {
 }
 
 type Loader interface {
-	Load() (*Config, error)
+	Load(path string) (*Config, error)
 }
