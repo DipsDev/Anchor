@@ -14,3 +14,7 @@ func (l *HclLoader) Load(path string) (*Config, error) {
 
 	return config, nil
 }
+
+func NewHclLoader() *HclLoader {
+	return &HclLoader{}
+}
