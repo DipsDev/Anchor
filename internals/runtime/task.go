@@ -2,25 +2,34 @@ package runtime
 
 import (
 	"bytes"
+	"fmt"
 	"os/exec"
+	"strings"
 )
 
 type Task interface {
-	Run() (stderr string, err error)
+	Run() error
 }
 
 type ShellTask struct {
 	Command string
 }
 
-func (t *ShellTask) Run() (stderr string, err error) {
-	var stderrBytes bytes.Buffer
-	cmd := exec.Command(t.Command)
-	cmd.Stderr = &stderrBytes
-	err = cmd.Run()
+func (t *ShellTask) Run() error {
+	args := strings.Split(t.Command, " ")
+	var stderr bytes.Buffer
+
+	cmd := exec.Command(args[0], args[1:]...)
+	cmd.Stderr = &stderr
+
+	err := cmd.Run()
 	if err != nil {
-		return stderrBytes.String(), err
+		if stderr.String() != "" {
+			return err
+		}
+		return fmt.Errorf(stderr.String())
 	}
-	return stderrBytes.String(), nil
+
+	return nil
 
 }
