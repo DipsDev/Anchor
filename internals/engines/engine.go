@@ -1,9 +1,14 @@
 package engines
 
+import (
+	cnfg "anchor/internals/config"
+	"fmt"
+)
+
 type EngineExecutionResult string
 
-type AnchorEngine[T any] interface {
-	Parse(service &ServiceConfig) (T, error)
+type AnchorEngine interface {
+	Parse(service cnfg.ServiceConfig) error
 	Execute() error
 }
 
