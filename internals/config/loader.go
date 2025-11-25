@@ -1,5 +1,7 @@
 package config
 
+import "github.com/zclconf/go-cty/cty"
+
 type Config struct {
 	Environments []EnvironmentConfig `hcl:"environment,block"`
 }
@@ -18,9 +20,7 @@ type ServiceConfig struct {
 	HealthCheck HealthCheckConfig `hcl:"health_check,block"`
 	DependsOn   []string          `hcl:"depends_on,optional"`
 
-	// Engine dependent
-	Image   *string `hcl:"image"`
-	Command *string `hcl:"command"`
+	Extras map[string]cty.Value `hcl:",remain"`
 }
 
 type TaskConfig struct {
