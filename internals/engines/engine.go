@@ -1,17 +1,42 @@
 package engines
 
 import (
-	cnfg "anchor/internals/config"
 	"fmt"
 )
 
 type EngineExecutionResult string
 
-type AnchorEngine interface {
-	Parse(service cnfg.ServiceConfig) error
-	Execute() error
+type Engine interface {
+	Init(engineConfig interface{}) error
+	Execute() (EngineExecutionResult, error)
 }
 
-func Create(engineType string) (AnchorEngine, error) {
-	return nil, fmt.Errorf("wrong engine type provided, go engine '%v'", engineType)
+type engineDefinition struct {
+	engineFactory func() Engine
+	configFactory func() interface{}
+}
+
+var engines = map[string]engineDefinition{
+	"docker": {
+		engineFactory: func() Engine { return &DockerEngine{} },
+		configFactory: func() interface{} { return &DockerEngineConfig{} },
+	},
+}
+
+func Create(engineType string) (Engine, error) {
+	engine, ok := engines[engineType]
+	if !ok {
+		return nil, fmt.Errorf("wrong engine type provided, engine '%v' is not defined\n", engineType)
+	}
+
+	return engine.engineFactory(), nil
+}
+
+func Config(engineType string) (interface{}, error) {
+	engine, ok := engines[engineType]
+	if !ok {
+		return nil, fmt.Errorf("wrong engine type provided, engine '%v' is not defined\n", engineType)
+	}
+
+	return engine.configFactory(), nil
 }
