@@ -7,15 +7,23 @@ type DockerEngineConfig struct {
 	Network string `hcl:"network"`
 }
 
-type DockerEngine struct{}
-
-func (m *DockerEngine) Init(config EngineConfig) error {
-	dockerConfig := config.(*DockerEngineConfig)
-	fmt.Printf("docker engine parse %v\n", dockerConfig.Image)
-	return nil
+type DockerEngine struct {
+	Config DockerEngineConfig
 }
 
-func (m *DockerEngine) Execute() (EngineExecutionResult, error) {
+func NewDockerEngine(config EngineConfig) DockerEngine {
+	dockerConfig := config.(*DockerEngineConfig)
+	return DockerEngine{
+		Config: *dockerConfig,
+	}
+}
+
+func (m DockerEngine) Start() (EngineExecutionResult, error) {
 	fmt.Println("docker engine execute")
-	return "result", nil
+	return "up", nil
+}
+
+func (m DockerEngine) Stop() (EngineExecutionResult, error) {
+	fmt.Println("Stopping docker container", m.Config.Image)
+	return "down", nil
 }
