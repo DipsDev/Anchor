@@ -31,8 +31,8 @@ func (l *HclLoader) Load(path string) (*Config, error) {
 		return nil, errors.New(diags.Error())
 	}
 
-	for _, env := range config.Environments {
-		for _, service := range env.Services {
+	for i, env := range config.Environments {
+		for j, service := range env.Services {
 			engineConf, engineConfError := engines.Config(service.Engine)
 			if engineConfError != nil {
 				return nil, engineConfError
@@ -43,7 +43,8 @@ func (l *HclLoader) Load(path string) (*Config, error) {
 				return nil, errors.New(engineDiags.Error())
 			}
 
-			service.EngineConfig = engineConf
+			// must use indices because env and service is a copy of the real data
+			config.Environments[i].Services[j].EngineConfig = engineConf
 		}
 	}
 
