@@ -9,7 +9,7 @@ type DockerEngineConfig struct {
 
 type DockerEngine struct{}
 
-func (m *DockerEngine) Init(config interface{}) error {
+func (m *DockerEngine) Init(config EngineConfig) error {
 	dockerConfig := config.(*DockerEngineConfig)
 	fmt.Printf("docker engine parse %v\n", dockerConfig.Image)
 	return nil

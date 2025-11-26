@@ -5,21 +5,22 @@ import (
 )
 
 type EngineExecutionResult string
+type EngineConfig interface{}
 
 type Engine interface {
-	Init(engineConfig interface{}) error
+	Init(engineConfig EngineConfig) error
 	Execute() (EngineExecutionResult, error)
 }
 
 type engineDefinition struct {
 	engineFactory func() Engine
-	configFactory func() interface{}
+	configFactory func() EngineConfig
 }
 
 var engines = map[string]engineDefinition{
 	"docker": {
 		engineFactory: func() Engine { return &DockerEngine{} },
-		configFactory: func() interface{} { return &DockerEngineConfig{} },
+		configFactory: func() EngineConfig { return &DockerEngineConfig{} },
 	},
 }
 
