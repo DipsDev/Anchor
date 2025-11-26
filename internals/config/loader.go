@@ -1,6 +1,7 @@
 package config
 
 import (
+	"anchor/internals/engines"
 	"github.com/hashicorp/hcl/v2"
 )
 
@@ -22,7 +23,11 @@ type ServiceConfig struct {
 	HealthCheck HealthCheckConfig `hcl:"health_check,block"`
 	DependsOn   []string          `hcl:"depends_on,optional"`
 
-	EngineConfig hcl.Body `hcl:",remain"`
+	// concrete engine config
+	EngineConfig engines.EngineConfig
+
+	// loader related config
+	HclEngineConfig hcl.Body `hcl:",remain"`
 }
 
 type TaskConfig struct {

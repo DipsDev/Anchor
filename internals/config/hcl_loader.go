@@ -31,17 +31,19 @@ func (l *HclLoader) Load(path string) (*Config, error) {
 		return nil, errors.New(diags.Error())
 	}
 
-	for _, envs := range config.Environments {
-		for _, services := range envs.Services {
-			engineConf, engineConfError := engines.Config(services.Engine)
+	for _, env := range config.Environments {
+		for _, service := range env.Services {
+			engineConf, engineConfError := engines.Config(service.Engine)
 			if engineConfError != nil {
 				return nil, engineConfError
 			}
 
-			engineDiags := gohcl.DecodeBody(services.EngineConfig, nil, engineConf)
+			engineDiags := gohcl.DecodeBody(service.HclEngineConfig, nil, engineConf)
 			if engineDiags.HasErrors() {
 				return nil, errors.New(engineDiags.Error())
 			}
+
+			service.EngineConfig = engineConf
 		}
 	}
 
