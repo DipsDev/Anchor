@@ -33,7 +33,7 @@ func Create(engineType string) (Engine, error) {
 	return engine.engineFactory(), nil
 }
 
-func Config(engineType string) (interface{}, error) {
+func Config(engineType string) (EngineConfig, error) {
 	engine, ok := engines[engineType]
 	if !ok {
 		return nil, fmt.Errorf("wrong engine type provided, engine '%v' is not defined\n", engineType)
