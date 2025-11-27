@@ -4,13 +4,18 @@ import (
 	"anchor/internals/config"
 	"context"
 	"fmt"
+	"github.com/moby/moby/api/types/container"
 	"github.com/moby/moby/client"
 	"log/slog"
+	"time"
 )
 
+const containerWaitingTimeout = 30 * time.Second
+
 type DockerEngineConfig struct {
-	Image   string `hcl:"image"`
-	Network string `hcl:"network"`
+	Image   string   `hcl:"image"`
+	Network *string  `hcl:"network,optional"`
+	Env     []string `hcl:"env,optional"`
 }
 
 type DockerEngine struct {
@@ -38,6 +43,28 @@ func (de DockerEngine) createConnection() (*dockerConnection, error) {
 
 }
 
+type waitingContainerPredicate func(inspectResult client.ContainerInspectResult) bool
+
+func waitForContainer(conn *dockerConnection, containerId string, predicate waitingContainerPredicate) error {
+	timeout := time.NewTimer(containerWaitingTimeout)
+	interval := time.NewTicker(1 * time.Second)
+	defer interval.Stop()
+	for {
+		select {
+		case <-timeout.C:
+			return fmt.Errorf("timed out waiting for container to start")
+		case <-interval.C:
+			inspectResult, err := conn.client.ContainerInspect(conn.ctx, containerId, client.ContainerInspectOptions{})
+			if err != nil {
+				return err
+			}
+			if predicate(inspectResult) {
+				return nil
+			}
+		}
+	}
+}
+
 func NewDockerEngine(serviceConfig config.ServiceConfig, config config.EngineConfig) DockerEngine {
 	dockerConfig := config.(*DockerEngineConfig)
 	return DockerEngine{
@@ -51,6 +78,7 @@ func (de DockerEngine) Start() (*EngineExecutionResult, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer conn.client.Close()
 
 	slog.Info("pulling image", "image", de.Config.Image)
 	_, err = conn.client.ImagePull(conn.ctx, de.Config.Image, client.ImagePullOptions{})
@@ -59,7 +87,9 @@ func (de DockerEngine) Start() (*EngineExecutionResult, error) {
 	}
 
 	resp, err := conn.client.ContainerCreate(conn.ctx, client.ContainerCreateOptions{
-		Config:           nil,
+		Config: &container.Config{
+			Env: de.Config.Env,
+		},
 		HostConfig:       nil,
 		NetworkingConfig: nil,
 		Platform:         nil,
@@ -70,7 +100,16 @@ func (de DockerEngine) Start() (*EngineExecutionResult, error) {
 		return nil, err
 	}
 
+	slog.Info("starting container", "id", resp.ID)
 	_, err = conn.client.ContainerStart(conn.ctx, resp.ID, client.ContainerStartOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	slog.Info("waiting for container to run", "id", resp.ID, "timeout", containerWaitingTimeout)
+	err = waitForContainer(conn, resp.ID, func(inspectResult client.ContainerInspectResult) bool {
+		return inspectResult.Container.State.Running
+	})
 	if err != nil {
 		return nil, err
 	}
