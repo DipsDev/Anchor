@@ -5,9 +5,12 @@ import (
 	"context"
 	"fmt"
 	"github.com/moby/moby/api/types/container"
+	"github.com/moby/moby/api/types/network"
 	"github.com/moby/moby/client"
 	"log/slog"
 	"math/rand"
+	"net/netip"
+	"strings"
 	"time"
 )
 
@@ -21,6 +24,7 @@ type DockerEngineConfig struct {
 	Image   string   `hcl:"image"`
 	Network *string  `hcl:"network,optional"`
 	Env     []string `hcl:"env,optional"`
+	Ports   []string `hcl:"ports,optional"`
 }
 
 type DockerEngine struct {
@@ -78,6 +82,26 @@ func newDocker(serviceConfig config.ServiceConfig, config config.EngineConfig) D
 	}
 }
 
+func generatePortMap(mapping []string) (network.PortMap, error) {
+	mp := make(network.PortMap)
+	for _, strPort := range mapping {
+		ports := strings.Split(strPort, ":")
+		hostPort := ports[0]
+		containerPort, err := network.ParsePort(ports[1])
+		if err != nil {
+			return nil, err
+		}
+
+		portBindings := make([]network.PortBinding, 0)
+		binding := network.PortBinding{
+			HostIP:   netip.Addr{},
+			HostPort: hostPort,
+		}
+		mp[containerPort] = append(portBindings, binding)
+	}
+	return mp, nil
+}
+
 func (de DockerEngine) Start() (EngineResultState, error) {
 	conn, err := de.createConnection()
 	if err != nil {
@@ -95,12 +119,19 @@ func (de DockerEngine) Start() (EngineResultState, error) {
 		return nil, err
 	}
 
+	portBindings, err := generatePortMap(de.Config.Ports)
+	if err != nil {
+		return nil, err
+	}
+
 	resp, err := conn.client.ContainerCreate(conn.ctx, client.ContainerCreateOptions{
 		Config: &container.Config{
 			Env: de.Config.Env,
 		},
-		HostConfig:       nil,
-		NetworkingConfig: nil,
+		HostConfig: &container.HostConfig{
+			PortBindings: portBindings,
+		},
+		NetworkingConfig: &network.NetworkingConfig{},
 		Platform:         nil,
 		Name:             fmt.Sprintf("anchor-%s%d", de.serviceConfig.Name, rand.Intn(300)),
 		Image:            de.Config.Image,
