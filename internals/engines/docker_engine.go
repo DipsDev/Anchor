@@ -7,6 +7,7 @@ import (
 	"github.com/moby/moby/api/types/container"
 	"github.com/moby/moby/client"
 	"log/slog"
+	"math/rand"
 	"time"
 )
 
@@ -101,7 +102,7 @@ func (de DockerEngine) Start() (EngineResultState, error) {
 		HostConfig:       nil,
 		NetworkingConfig: nil,
 		Platform:         nil,
-		Name:             de.serviceConfig.Name,
+		Name:             fmt.Sprintf("anchor-%s%d", de.serviceConfig.Name, rand.Intn(300)),
 		Image:            de.Config.Image,
 	})
 	if err != nil {
