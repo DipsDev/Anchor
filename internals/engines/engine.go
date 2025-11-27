@@ -5,11 +5,12 @@ import (
 	"fmt"
 )
 
-type EngineExecutionResult string
+// EngineResultState is interface{} to allow each engine to save what they need
+type EngineResultState interface{}
 
 type Engine interface {
-	Start() (*EngineExecutionResult, error)
-	Stop() (*EngineExecutionResult, error)
+	Start() (EngineResultState, error)
+	Stop() (EngineResultState, error)
 }
 
 type engineDefinition struct {
@@ -20,7 +21,7 @@ type engineDefinition struct {
 var engines = map[string]engineDefinition{
 	"docker": {
 		engineFactory: func(serviceConfig config.ServiceConfig, config config.EngineConfig) Engine {
-			return NewDockerEngine(serviceConfig, config)
+			return newDocker(serviceConfig, config)
 		},
 		configFactory: func() config.EngineConfig { return &DockerEngineConfig{} },
 	},

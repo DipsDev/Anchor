@@ -6,20 +6,21 @@ import (
 	"path/filepath"
 )
 
-const ConfigFilename = "Anchorfile"
+const anchorFilename = "Anchorfile"
+const stateFilename = ".Anchorstate"
 
-type BaseConfig struct {
+type LoadingConfig struct {
 	LoaderName string
 	Path       string
 }
 
-func loadConfig(rConfig BaseConfig) (*config.Config, error) {
-	configLoader, err := loader.CreateLoader(rConfig.LoaderName)
+func loadConfig(rConfig LoadingConfig) (*config.Config, error) {
+	configLoader, err := loader.NewLoader(rConfig.LoaderName)
 	if err != nil {
 		return nil, err
 	}
 
-	cnfg, err := configLoader.Load(filepath.Join(rConfig.Path, ConfigFilename))
+	cnfg, err := configLoader.Load(filepath.Join(rConfig.Path, anchorFilename))
 	if err != nil {
 		return nil, err
 	}

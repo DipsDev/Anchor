@@ -22,8 +22,12 @@ var applyCmd = &cobra.Command{
 
 		applyConfig := runtime.ApplyConfig{
 			Environment: args[0],
-			BaseConfig: runtime.BaseConfig{
+			AnchorLoaderConfig: runtime.LoadingConfig{
 				LoaderName: "hcl",
+				Path:       execPath,
+			},
+			StateLoaderConfig: runtime.LoadingConfig{
+				LoaderName: "json",
 				Path:       execPath,
 			},
 		}

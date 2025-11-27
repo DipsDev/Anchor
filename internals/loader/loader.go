@@ -22,7 +22,7 @@ var loaders = map[string]mappedLoader{
 	},
 }
 
-func CreateLoader(loaderName string) (Loader, error) {
+func NewLoader(loaderName string) (Loader, error) {
 	loader, ok := loaders[loaderName]
 	if !ok {
 		return nil, fmt.Errorf("loader %s does not exist", loaderName)

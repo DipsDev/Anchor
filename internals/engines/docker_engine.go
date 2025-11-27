@@ -12,6 +12,10 @@ import (
 
 const containerWaitingTimeout = 30 * time.Second
 
+type DockerResultState struct {
+	Pid string
+}
+
 type DockerEngineConfig struct {
 	Image   string   `hcl:"image"`
 	Network *string  `hcl:"network,optional"`
@@ -65,7 +69,7 @@ func waitForContainer(conn *dockerConnection, containerId string, predicate wait
 	}
 }
 
-func NewDockerEngine(serviceConfig config.ServiceConfig, config config.EngineConfig) DockerEngine {
+func newDocker(serviceConfig config.ServiceConfig, config config.EngineConfig) DockerEngine {
 	dockerConfig := config.(*DockerEngineConfig)
 	return DockerEngine{
 		Config:        *dockerConfig,
@@ -73,7 +77,7 @@ func NewDockerEngine(serviceConfig config.ServiceConfig, config config.EngineCon
 	}
 }
 
-func (de DockerEngine) Start() (*EngineExecutionResult, error) {
+func (de DockerEngine) Start() (EngineResultState, error) {
 	conn, err := de.createConnection()
 	if err != nil {
 		return nil, err
@@ -114,10 +118,12 @@ func (de DockerEngine) Start() (*EngineExecutionResult, error) {
 		return nil, err
 	}
 
-	return nil, nil
+	return &DockerResultState{
+		Pid: resp.ID,
+	}, nil
 }
 
-func (de DockerEngine) Stop() (*EngineExecutionResult, error) {
+func (de DockerEngine) Stop() (EngineResultState, error) {
 	fmt.Println("Stopping docker container", de.Config.Image)
 	return nil, nil
 }

@@ -2,23 +2,21 @@ package state
 
 import (
 	"encoding/json"
+	"log/slog"
 	"os"
 )
 
-type JsonLoader struct {
-	Path string
+type JsonLoader struct{}
+
+func newJsonLoader() *JsonLoader {
+	return &JsonLoader{}
 }
 
-func NewJsonStateLoader(path string) *JsonLoader {
-	return &JsonLoader{
-		Path: path,
-	}
-}
-
-func (stl JsonLoader) Load() (*State, error) {
-	data, err := os.ReadFile(stl.Path)
+func (stl JsonLoader) Load(path string) (*State, error) {
+	data, err := os.ReadFile(path)
 	if err != nil {
-		return nil, err
+		slog.Warn("encountered an error while trying to read statefile, ignoring...", "path", path, "error", err)
+		return &State{}, nil
 	}
 
 	state := &State{}
@@ -30,11 +28,11 @@ func (stl JsonLoader) Load() (*State, error) {
 	return state, nil
 }
 
-func (stl JsonLoader) Write(state State) error {
+func (stl JsonLoader) Write(path string, state State) error {
 	data, err := json.MarshalIndent(state, "", " ")
 	if err != nil {
 		return err
 	}
 
-	return os.WriteFile(stl.Path, data, 0644)
+	return os.WriteFile(path, data, 0644)
 }
