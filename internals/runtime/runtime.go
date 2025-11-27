@@ -2,35 +2,26 @@ package runtime
 
 import (
 	"anchor/internals/config"
-	"fmt"
 	"path/filepath"
 )
 
 const CONFIG_FILENAME = "Anchorfile"
 
-type ApplyConfig struct {
-	Environment string
-	LoaderName  string
-	Path        string
+type runtimeConfig struct {
+	LoaderName string
+	Path       string
 }
 
-func ApplyEnvironmentCmd(applyConfig ApplyConfig) error {
-	loader, err := config.CreateLoader(applyConfig.LoaderName)
+func loadConfig(rConfig runtimeConfig) (*config.Config, error) {
+	loader, err := config.CreateLoader(rConfig.LoaderName)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	cnfg, err := loader.Load(filepath.Join(applyConfig.Path, CONFIG_FILENAME))
+	cnfg, err := loader.Load(filepath.Join(rConfig.Path, CONFIG_FILENAME))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	for _, env := range cnfg.Environments {
-		if env.Name == applyConfig.Environment {
-			return applyEnvironment(env)
-		}
-	}
-
-	return fmt.Errorf("environment %s not found", applyConfig.Environment)
-
+	return cnfg, nil
 }

@@ -3,6 +3,7 @@ package runtime
 import (
 	"anchor/internals/config"
 	"anchor/internals/engines"
+	"fmt"
 	"log/slog"
 )
 
@@ -22,4 +23,25 @@ func applyEnvironment(env config.EnvironmentConfig) error {
 
 	slog.Info("Environment applied", "name", env.Name)
 	return nil
+}
+
+type ApplyConfig struct {
+	runtimeConfig
+	Environment string
+}
+
+func ApplyEnvironmentCmd(applyConfig ApplyConfig) error {
+	cnfg, err := loadConfig(applyConfig.runtimeConfig)
+	if err != nil {
+		return err
+	}
+
+	for _, env := range cnfg.Environments {
+		if env.Name == applyConfig.Environment {
+			return applyEnvironment(env)
+		}
+	}
+
+	return fmt.Errorf("environment %s not found", applyConfig.Environment)
+
 }
