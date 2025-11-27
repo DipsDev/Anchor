@@ -2,6 +2,7 @@ package config
 
 import (
 	"anchor/internals/engines"
+	"fmt"
 	"github.com/hashicorp/hcl/v2"
 )
 
@@ -46,4 +47,26 @@ type HealthCheckConfig struct {
 
 type Loader interface {
 	Load(path string) (*Config, error)
+}
+
+type mappedLoader struct {
+	CreateLoader func() (Loader, error)
+}
+
+var loaders = map[string]mappedLoader{
+	"hcl": {
+		CreateLoader: func() (Loader, error) {
+			hclLoader := NewHclLoader()
+			return hclLoader, nil
+		},
+	},
+}
+
+func CreateLoader(loaderName string) (Loader, error) {
+	loader, ok := loaders[loaderName]
+	if !ok {
+		return nil, fmt.Errorf("loader %s does not exist", loaderName)
+	}
+
+	return loader.CreateLoader()
 }
