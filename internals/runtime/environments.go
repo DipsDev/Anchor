@@ -10,7 +10,7 @@ import (
 func applyEnvironment(env config.EnvironmentConfig) error {
 	slog.Info("Applying environment", "name", env.Name)
 	for _, service := range env.Services {
-		engine, err := engines.Create(service.Engine, env, service.EngineConfig)
+		engine, err := engines.Create(service.Engine, service, service.EngineConfig)
 		if err != nil {
 			return err
 		}

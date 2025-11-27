@@ -13,26 +13,26 @@ type Engine interface {
 }
 
 type engineDefinition struct {
-	engineFactory func(globalConfig config.EnvironmentConfig, config config.EngineConfig) Engine
+	engineFactory func(serviceConfig config.ServiceConfig, config config.EngineConfig) Engine
 	configFactory func() config.EngineConfig
 }
 
 var engines = map[string]engineDefinition{
 	"docker": {
-		engineFactory: func(globalConfig config.EnvironmentConfig, config config.EngineConfig) Engine {
-			return NewDockerEngine(globalConfig, config)
+		engineFactory: func(serviceConfig config.ServiceConfig, config config.EngineConfig) Engine {
+			return NewDockerEngine(serviceConfig, config)
 		},
 		configFactory: func() config.EngineConfig { return &DockerEngineConfig{} },
 	},
 }
 
-func Create(engineType string, globalConfig config.EnvironmentConfig, config config.EngineConfig) (Engine, error) {
+func Create(engineType string, serviceConfig config.ServiceConfig, config config.EngineConfig) (Engine, error) {
 	engine, ok := engines[engineType]
 	if !ok {
 		return nil, fmt.Errorf("wrong engine type provided, engine '%v' is not defined\n", engineType)
 	}
 
-	return engine.engineFactory(globalConfig, config), nil
+	return engine.engineFactory(serviceConfig, config), nil
 }
 
 func Config(engineType string) (config.EngineConfig, error) {

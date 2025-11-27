@@ -6,10 +6,7 @@ import (
 	"fmt"
 	"github.com/moby/moby/client"
 	"log/slog"
-	"strings"
 )
-
-const dockerContainerShuffix = ".anc"
 
 type DockerEngineConfig struct {
 	Image   string `hcl:"image"`
@@ -17,8 +14,8 @@ type DockerEngineConfig struct {
 }
 
 type DockerEngine struct {
-	Config       DockerEngineConfig
-	globalConfig config.EnvironmentConfig
+	Config        DockerEngineConfig
+	serviceConfig config.ServiceConfig
 }
 
 type dockerConnection struct {
@@ -41,11 +38,11 @@ func (de DockerEngine) createConnection() (*dockerConnection, error) {
 
 }
 
-func NewDockerEngine(globalConfig config.EnvironmentConfig, config config.EngineConfig) DockerEngine {
+func NewDockerEngine(serviceConfig config.ServiceConfig, config config.EngineConfig) DockerEngine {
 	dockerConfig := config.(*DockerEngineConfig)
 	return DockerEngine{
-		Config:       *dockerConfig,
-		globalConfig: globalConfig,
+		Config:        *dockerConfig,
+		serviceConfig: serviceConfig,
 	}
 }
 
@@ -61,14 +58,12 @@ func (de DockerEngine) Start() (*EngineExecutionResult, error) {
 		return nil, err
 	}
 
-	imagePath := strings.Split(de.Config.Image, "/")
-	imageName := imagePath[len(imagePath)-1]
 	resp, err := conn.client.ContainerCreate(conn.ctx, client.ContainerCreateOptions{
 		Config:           nil,
 		HostConfig:       nil,
 		NetworkingConfig: nil,
 		Platform:         nil,
-		Name:             fmt.Sprintf("%s-%s%s", de.globalConfig.Name, imageName, dockerContainerShuffix),
+		Name:             de.serviceConfig.Name,
 		Image:            de.Config.Image,
 	})
 	if err != nil {
