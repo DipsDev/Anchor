@@ -21,7 +21,7 @@ func applyEnvironment(env config.EnvironmentConfig) error {
 		}
 	}
 
-	slog.Info("Environment applied", "name", env.Name)
+	slog.Info("environment applied", "name", env.Name)
 	return nil
 }
 
