@@ -17,10 +17,10 @@ type EnvironmentConfig struct {
 type EngineConfig interface{}
 
 type ServiceConfig struct {
-	Name        string            `hcl:"name,label"`
-	Engine      string            `hcl:"engine"`
-	HealthCheck HealthCheckConfig `hcl:"health_check,block"`
-	DependsOn   []string          `hcl:"depends_on,optional"`
+	Name        string             `hcl:"name,label"`
+	Engine      string             `hcl:"engine"`
+	HealthCheck *HealthCheckConfig `hcl:"health_check,block"`
+	DependsOn   []string           `hcl:"depends_on,optional"`
 
 	// concrete engine config
 	EngineConfig EngineConfig

@@ -84,8 +84,12 @@ func (de DockerEngine) Start() (EngineResultState, error) {
 	}
 	defer conn.client.Close()
 
-	slog.Info("pulling image", "image", de.Config.Image)
-	_, err = conn.client.ImagePull(conn.ctx, de.Config.Image, client.ImagePullOptions{})
+	slog.Info("pulling docker image", "image", de.Config.Image)
+	pullResponse, err := conn.client.ImagePull(conn.ctx, de.Config.Image, client.ImagePullOptions{})
+	if err != nil {
+		return nil, err
+	}
+	err = pullResponse.Wait(conn.ctx)
 	if err != nil {
 		return nil, err
 	}
