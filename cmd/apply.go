@@ -22,8 +22,10 @@ var applyCmd = &cobra.Command{
 
 		applyConfig := runtime.ApplyConfig{
 			Environment: args[0],
-			LoaderName:  "hcl",
-			Path:        execPath,
+			BaseConfig: runtime.BaseConfig{
+				LoaderName: "hcl",
+				Path:       execPath,
+			},
 		}
 
 		return runtime.ApplyEnvironmentCmd(applyConfig)

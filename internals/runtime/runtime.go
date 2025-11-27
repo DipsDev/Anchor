@@ -7,12 +7,12 @@ import (
 
 const CONFIG_FILENAME = "Anchorfile"
 
-type runtimeConfig struct {
+type BaseConfig struct {
 	LoaderName string
 	Path       string
 }
 
-func loadConfig(rConfig runtimeConfig) (*config.Config, error) {
+func loadConfig(rConfig BaseConfig) (*config.Config, error) {
 	loader, err := config.CreateLoader(rConfig.LoaderName)
 	if err != nil {
 		return nil, err

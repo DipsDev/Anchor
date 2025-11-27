@@ -26,12 +26,12 @@ func applyEnvironment(env config.EnvironmentConfig) error {
 }
 
 type ApplyConfig struct {
-	runtimeConfig
+	BaseConfig
 	Environment string
 }
 
 func ApplyEnvironmentCmd(applyConfig ApplyConfig) error {
-	cnfg, err := loadConfig(applyConfig.runtimeConfig)
+	cnfg, err := loadConfig(applyConfig.BaseConfig)
 	if err != nil {
 		return err
 	}
