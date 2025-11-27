@@ -10,9 +10,13 @@ type DockerEngineState struct {
 	Status string
 }
 
+type EnvironmentState struct {
+	Engine []EngineState
+}
+
 type State struct {
 	Version      int
-	EngineStates []EngineState
+	Environments []EnvironmentState
 }
 
 type Loader interface {
