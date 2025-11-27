@@ -1,6 +1,7 @@
-package config
+package loader
 
 import (
+	"anchor/internals/config"
 	"anchor/internals/engines"
 	"errors"
 	"github.com/hashicorp/hcl/v2/gohcl"
@@ -11,8 +12,8 @@ import (
 type HclLoader struct {
 }
 
-func (l *HclLoader) Load(path string) (*Config, error) {
-	var config Config
+func (l *HclLoader) Load(path string) (*config.Config, error) {
+	var globalConfig config.Config
 
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -26,12 +27,12 @@ func (l *HclLoader) Load(path string) (*Config, error) {
 		return nil, errors.New(diags.Error())
 	}
 
-	diags = gohcl.DecodeBody(f.Body, nil, &config)
+	diags = gohcl.DecodeBody(f.Body, nil, &globalConfig)
 	if diags.HasErrors() {
 		return nil, errors.New(diags.Error())
 	}
 
-	for i, env := range config.Environments {
+	for i, env := range globalConfig.Environments {
 		for j, service := range env.Services {
 			engineConf, engineConfError := engines.Config(service.Engine)
 			if engineConfError != nil {
@@ -44,11 +45,11 @@ func (l *HclLoader) Load(path string) (*Config, error) {
 			}
 
 			// must use indices because env and service is a copy of the real data
-			config.Environments[i].Services[j].EngineConfig = engineConf
+			globalConfig.Environments[i].Services[j].EngineConfig = engineConf
 		}
 	}
 
-	return &config, nil
+	return &globalConfig, nil
 }
 
 func NewHclLoader() *HclLoader {

@@ -1,39 +1,41 @@
 package engines
 
 import (
+	"anchor/internals/config"
 	"fmt"
 )
 
 type EngineExecutionResult string
-type EngineConfig interface{}
 
 type Engine interface {
-	Start() (EngineExecutionResult, error)
-	Stop() (EngineExecutionResult, error)
+	Start() (*EngineExecutionResult, error)
+	Stop() (*EngineExecutionResult, error)
 }
 
 type engineDefinition struct {
-	engineFactory func(config EngineConfig) Engine
-	configFactory func() EngineConfig
+	engineFactory func(globalConfig config.EnvironmentConfig, config config.EngineConfig) Engine
+	configFactory func() config.EngineConfig
 }
 
 var engines = map[string]engineDefinition{
 	"docker": {
-		engineFactory: func(config EngineConfig) Engine { return NewDockerEngine(config) },
-		configFactory: func() EngineConfig { return &DockerEngineConfig{} },
+		engineFactory: func(globalConfig config.EnvironmentConfig, config config.EngineConfig) Engine {
+			return NewDockerEngine(globalConfig, config)
+		},
+		configFactory: func() config.EngineConfig { return &DockerEngineConfig{} },
 	},
 }
 
-func Create(engineType string, config EngineConfig) (Engine, error) {
+func Create(engineType string, globalConfig config.EnvironmentConfig, config config.EngineConfig) (Engine, error) {
 	engine, ok := engines[engineType]
 	if !ok {
 		return nil, fmt.Errorf("wrong engine type provided, engine '%v' is not defined\n", engineType)
 	}
 
-	return engine.engineFactory(config), nil
+	return engine.engineFactory(globalConfig, config), nil
 }
 
-func Config(engineType string) (EngineConfig, error) {
+func Config(engineType string) (config.EngineConfig, error) {
 	engine, ok := engines[engineType]
 	if !ok {
 		return nil, fmt.Errorf("wrong engine type provided, engine '%v' is not defined\n", engineType)

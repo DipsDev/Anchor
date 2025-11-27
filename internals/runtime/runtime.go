@@ -2,10 +2,11 @@ package runtime
 
 import (
 	"anchor/internals/config"
+	"anchor/internals/loader"
 	"path/filepath"
 )
 
-const CONFIG_FILENAME = "Anchorfile"
+const ConfigFilename = "Anchorfile"
 
 type BaseConfig struct {
 	LoaderName string
@@ -13,12 +14,12 @@ type BaseConfig struct {
 }
 
 func loadConfig(rConfig BaseConfig) (*config.Config, error) {
-	loader, err := config.CreateLoader(rConfig.LoaderName)
+	configLoader, err := loader.CreateLoader(rConfig.LoaderName)
 	if err != nil {
 		return nil, err
 	}
 
-	cnfg, err := loader.Load(filepath.Join(rConfig.Path, CONFIG_FILENAME))
+	cnfg, err := configLoader.Load(filepath.Join(rConfig.Path, ConfigFilename))
 	if err != nil {
 		return nil, err
 	}
