@@ -16,7 +16,7 @@ import (
 
 const containerWaitingTimeout = 30 * time.Second
 
-type DockerResultState struct {
+type dockerState struct {
 	Pid string
 }
 
@@ -30,6 +30,7 @@ type DockerEngineConfig struct {
 type DockerEngine struct {
 	Config        DockerEngineConfig
 	serviceConfig config.ServiceConfig
+	state         dockerState
 }
 
 type dockerConnection struct {
@@ -74,11 +75,12 @@ func waitForContainer(conn *dockerConnection, containerId string, predicate wait
 	}
 }
 
-func newDocker(serviceConfig config.ServiceConfig, config config.EngineConfig) DockerEngine {
+func newDocker(serviceConfig config.ServiceConfig, config config.EngineConfig, state EngineState) DockerEngine {
 	dockerConfig := config.(*DockerEngineConfig)
 	return DockerEngine{
 		Config:        *dockerConfig,
 		serviceConfig: serviceConfig,
+		state:         state.(dockerState),
 	}
 }
 
@@ -102,7 +104,7 @@ func generatePortMap(mapping []string) (network.PortMap, error) {
 	return mp, nil
 }
 
-func (de DockerEngine) Start() (EngineResultState, error) {
+func (de DockerEngine) Start() (EngineState, error) {
 	conn, err := de.createConnection()
 	if err != nil {
 		return nil, err
@@ -154,12 +156,12 @@ func (de DockerEngine) Start() (EngineResultState, error) {
 		return nil, err
 	}
 
-	return &DockerResultState{
+	return &dockerState{
 		Pid: resp.ID,
 	}, nil
 }
 
-func (de DockerEngine) Stop() (EngineResultState, error) {
+func (de DockerEngine) Stop() (EngineState, error) {
 	fmt.Println("Stopping docker container", de.Config.Image)
 	return nil, nil
 }

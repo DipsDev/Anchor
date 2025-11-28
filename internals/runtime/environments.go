@@ -13,13 +13,18 @@ func applyEnvironment(env config.EnvironmentConfig, globalState state.State) (*s
 	slog.Info("Applying environment", "name", env.Name)
 
 	for _, service := range env.Services {
-		engine, err := engines.Create(service.Engine, service, service.EngineConfig)
+		engineState, err := globalState.GetServiceState(env.Name, service.Name)
 		if err != nil {
 			return nil, err
 		}
 
-		engineState, err := engine.Start()
-		globalState.AddServiceState(env.Name, service.Name, engineState)
+		engine, err := engines.Create(service.Engine, service, service.EngineConfig, engineState)
+		if err != nil {
+			return nil, err
+		}
+
+		engineNewState, err := engine.Start()
+		globalState.AddServiceState(env.Name, service.Name, engineNewState)
 
 		if err != nil {
 			return nil, err
