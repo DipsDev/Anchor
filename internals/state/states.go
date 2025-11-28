@@ -36,6 +36,19 @@ func (st *State) AddServiceState(env string, serviceName string, service Service
 
 }
 
+func (st *State) GetServiceState(env string, serviceName string) (*ServiceState, bool) {
+	envState, ok := st.Environments[env]
+	if !ok {
+		return nil, false
+	}
+
+	serviceState, ok := envState.Services[serviceName]
+	if !ok {
+		return nil, false
+	}
+	return &serviceState, true
+}
+
 type mappedLoader struct {
 	NewLoader func() Loader
 }

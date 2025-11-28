@@ -2,6 +2,7 @@ package engines
 
 import (
 	"anchor/internals/config"
+	"anchor/internals/state"
 	"context"
 	"fmt"
 	"github.com/moby/moby/api/types/container"
@@ -16,10 +17,6 @@ import (
 
 const containerWaitingTimeout = 30 * time.Second
 
-type DockerResultState struct {
-	Pid string
-}
-
 type DockerEngineConfig struct {
 	Image   string   `hcl:"image"`
 	Network *string  `hcl:"network,optional"`
@@ -27,9 +24,18 @@ type DockerEngineConfig struct {
 	Ports   []string `hcl:"ports,optional"`
 }
 
+type dockerEngineState struct {
+	Pid string
+}
+
+func createDefaultDockerState() state.ServiceState {
+	return dockerEngineState{Pid: ""}
+}
+
 type DockerEngine struct {
-	Config        DockerEngineConfig
+	config        DockerEngineConfig
 	serviceConfig config.ServiceConfig
+	state         dockerEngineState
 }
 
 type dockerConnection struct {
@@ -56,7 +62,7 @@ type waitingContainerPredicate func(inspectResult client.ContainerInspectResult)
 
 func waitForContainer(conn *dockerConnection, containerId string, predicate waitingContainerPredicate) error {
 	timeout := time.NewTimer(containerWaitingTimeout)
-	interval := time.NewTicker(1 * time.Second)
+	interval := time.NewTicker(4 * time.Second)
 	defer interval.Stop()
 	for {
 		select {
@@ -74,11 +80,11 @@ func waitForContainer(conn *dockerConnection, containerId string, predicate wait
 	}
 }
 
-func newDocker(serviceConfig config.ServiceConfig, config config.EngineConfig) DockerEngine {
-	dockerConfig := config.(*DockerEngineConfig)
+func newDocker(serviceConfig config.ServiceConfig, config config.EngineConfig, serviceState state.ServiceState) Engine {
 	return DockerEngine{
-		Config:        *dockerConfig,
+		config:        *config.(*DockerEngineConfig),
 		serviceConfig: serviceConfig,
+		state:         serviceState.(dockerEngineState),
 	}
 }
 
@@ -102,15 +108,34 @@ func generatePortMap(mapping []string) (network.PortMap, error) {
 	return mp, nil
 }
 
-func (de DockerEngine) Start() (EngineResultState, error) {
+func (de DockerEngine) Start() (state.ServiceState, error) {
 	conn, err := de.createConnection()
 	if err != nil {
 		return nil, err
 	}
 	defer conn.client.Close()
 
-	slog.Info("pulling docker image", "image", de.Config.Image)
-	pullResponse, err := conn.client.ImagePull(conn.ctx, de.Config.Image, client.ImagePullOptions{})
+	// if the container is already created, just run it
+	if de.state.Pid != "" {
+		slog.Info("starting container", "id", de.state.Pid)
+		_, err = conn.client.ContainerStart(conn.ctx, de.state.Pid, client.ContainerStartOptions{})
+		if err != nil {
+			return nil, err
+		}
+
+		slog.Info("waiting for container to run", "id", de.state.Pid, "timeout", containerWaitingTimeout)
+		err = waitForContainer(conn, de.state.Pid, func(inspectResult client.ContainerInspectResult) bool {
+			return inspectResult.Container.State.Running
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		return de.state, nil
+	}
+
+	slog.Info("pulling docker image", "image", de.config.Image)
+	pullResponse, err := conn.client.ImagePull(conn.ctx, de.config.Image, client.ImagePullOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -119,14 +144,14 @@ func (de DockerEngine) Start() (EngineResultState, error) {
 		return nil, err
 	}
 
-	portBindings, err := generatePortMap(de.Config.Ports)
+	portBindings, err := generatePortMap(de.config.Ports)
 	if err != nil {
 		return nil, err
 	}
 
 	resp, err := conn.client.ContainerCreate(conn.ctx, client.ContainerCreateOptions{
 		Config: &container.Config{
-			Env: de.Config.Env,
+			Env: de.config.Env,
 		},
 		HostConfig: &container.HostConfig{
 			PortBindings: portBindings,
@@ -134,7 +159,7 @@ func (de DockerEngine) Start() (EngineResultState, error) {
 		NetworkingConfig: &network.NetworkingConfig{},
 		Platform:         nil,
 		Name:             fmt.Sprintf("anchor-%s%d", de.serviceConfig.Name, rand.Intn(300)),
-		Image:            de.Config.Image,
+		Image:            de.config.Image,
 	})
 	if err != nil {
 		return nil, err
@@ -154,12 +179,31 @@ func (de DockerEngine) Start() (EngineResultState, error) {
 		return nil, err
 	}
 
-	return &DockerResultState{
+	return &dockerEngineState{
 		Pid: resp.ID,
 	}, nil
 }
 
-func (de DockerEngine) Stop() (EngineResultState, error) {
-	fmt.Println("Stopping docker container", de.Config.Image)
-	return nil, nil
+func (de DockerEngine) Stop() (state.ServiceState, error) {
+	conn, err := de.createConnection()
+	if err != nil {
+		return nil, err
+	}
+	defer conn.client.Close()
+
+	slog.Info("stopping docker container", "id", de.state.Pid)
+	_, err = conn.client.ContainerStop(conn.ctx, de.state.Pid, client.ContainerStopOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	slog.Info("waiting for container to stop", "id", de.state.Pid, "timeout", containerWaitingTimeout)
+	err = waitForContainer(conn, de.state.Pid, func(inspectResult client.ContainerInspectResult) bool {
+		return !inspectResult.Container.State.Running
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return de.state, nil
 }
