@@ -57,7 +57,7 @@ type waitingContainerPredicate func(inspectResult client.ContainerInspectResult)
 
 func waitForContainer(conn *dockerConnection, containerId string, predicate waitingContainerPredicate) error {
 	timeout := time.NewTimer(containerWaitingTimeout)
-	interval := time.NewTicker(1 * time.Second)
+	interval := time.NewTicker(5 * time.Second)
 	defer interval.Stop()
 	for {
 		select {
@@ -162,6 +162,25 @@ func (de DockerEngine) Start() (EngineState, error) {
 }
 
 func (de DockerEngine) Stop() (EngineState, error) {
-	fmt.Println("Stopping docker container", de.Config.Image)
-	return nil, nil
+	conn, err := de.createConnection()
+	if err != nil {
+		return nil, err
+	}
+	defer conn.client.Close()
+
+	slog.Info("stopping docker container", "id", de.state.Pid)
+	_, err = conn.client.ContainerStop(conn.ctx, de.state.Pid, client.ContainerStopOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	slog.Info("waiting for container to stop", "id", de.state.Pid, "timeout", containerWaitingTimeout)
+	err = waitForContainer(conn, de.state.Pid, func(inspectResult client.ContainerInspectResult) bool {
+		return !inspectResult.Container.State.Running
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return de.state, nil
 }
