@@ -62,7 +62,7 @@ type waitingContainerPredicate func(inspectResult client.ContainerInspectResult)
 
 func waitForContainer(conn *dockerConnection, containerId string, predicate waitingContainerPredicate) error {
 	timeout := time.NewTimer(containerWaitingTimeout)
-	interval := time.NewTicker(5 * time.Second)
+	interval := time.NewTicker(4 * time.Second)
 	defer interval.Stop()
 	for {
 		select {
@@ -114,6 +114,25 @@ func (de DockerEngine) Start() (state.ServiceState, error) {
 		return nil, err
 	}
 	defer conn.client.Close()
+
+	// if the container is already created, just run it
+	if de.state.Pid != "" {
+		slog.Info("starting container", "id", de.state.Pid)
+		_, err = conn.client.ContainerStart(conn.ctx, de.state.Pid, client.ContainerStartOptions{})
+		if err != nil {
+			return nil, err
+		}
+
+		slog.Info("waiting for container to run", "id", de.state.Pid, "timeout", containerWaitingTimeout)
+		err = waitForContainer(conn, de.state.Pid, func(inspectResult client.ContainerInspectResult) bool {
+			return inspectResult.Container.State.Running
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		return de.state, nil
+	}
 
 	slog.Info("pulling docker image", "image", de.config.Image)
 	pullResponse, err := conn.client.ImagePull(conn.ctx, de.config.Image, client.ImagePullOptions{})
