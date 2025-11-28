@@ -36,16 +36,17 @@ func (st *State) AddServiceState(env string, serviceName string, service Service
 
 }
 
-func (st *State) GetServiceState(env string, serviceName string) (*ServiceState, error) {
+func (st *State) GetServiceState(env string, serviceName string) (*ServiceState, bool) {
 	envState, ok := st.Environments[env]
 	if !ok {
-		return nil, fmt.Errorf("environment %s does not exist", env)
+		return nil, false
 	}
+
 	serviceState, ok := envState.Services[serviceName]
 	if !ok {
-		return nil, fmt.Errorf("service %s does not exist", serviceName)
+		return nil, false
 	}
-	return &serviceState, nil
+	return &serviceState, true
 }
 
 type mappedLoader struct {

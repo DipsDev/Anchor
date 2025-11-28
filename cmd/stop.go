@@ -8,12 +8,12 @@ import (
 )
 
 func init() {
-	rootCmd.AddCommand(applyCmd)
+	rootCmd.AddCommand(stopCmd)
 }
 
-var applyCmd = &cobra.Command{
-	Use:   "apply <environment>",
-	Short: "Apply the environment and start the required services",
+var stopCmd = &cobra.Command{
+	Use:   "stop <environment>",
+	Short: "Close the environment and stop its services",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		execPath, err := os.Getwd()
@@ -34,7 +34,7 @@ var applyCmd = &cobra.Command{
 			},
 		}
 
-		err = runtime.ApplyEnvironmentCmd(applyConfig)
+		err = runtime.StopEnvironmentCmd(applyConfig)
 		if err != nil {
 			slog.Error(err.Error())
 		}
