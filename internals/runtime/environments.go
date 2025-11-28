@@ -10,7 +10,7 @@ import (
 )
 
 func applyEnvironment(env config.EnvironmentConfig, globalState state.State) (*state.State, error) {
-	slog.Info("Applying environment", "name", env.Name)
+	slog.Info("applying environment", "name", env.Name)
 
 	for _, service := range env.Services {
 		engineState, err := globalState.GetServiceState(env.Name, service.Name)
