@@ -157,6 +157,7 @@ func applyEnvironment(env config.EnvironmentConfig, globalState state.State) (*s
 			return nil, err
 		}
 
+		slog.Info("starting service", "name", service.Name)
 		engineNewState, err := engine.Start()
 		globalState.AddServiceState(env.Name, service.Name, engineNewState)
 
@@ -189,6 +190,7 @@ func stopEnvironment(env config.EnvironmentConfig, globalState state.State) (*st
 			return nil, err
 		}
 
+		slog.Info("stopping service", "name", service.Name)
 		engineStopState, err := engine.Stop()
 		globalState.AddServiceState(env.Name, service.Name, engineStopState)
 		if err != nil {
