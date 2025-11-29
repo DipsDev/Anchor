@@ -44,6 +44,10 @@ type dockerConnection struct {
 	client *client.Client
 }
 
+func (dC *dockerConnection) Close() error {
+	return dC.client.Close()
+}
+
 func (de DockerEngine) createConnection() (*dockerConnection, error) {
 	ctx := context.Background()
 	cli, err := client.New()
@@ -114,7 +118,7 @@ func (de DockerEngine) Start() (state.ServiceState, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer conn.client.Close()
+	defer conn.Close()
 
 	// if the container is already created, just run it
 	if de.state.Pid != "" {
@@ -190,7 +194,7 @@ func (de DockerEngine) Stop() (state.ServiceState, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer conn.client.Close()
+	defer conn.Close()
 
 	slog.Info("stopping docker container", "id", de.state.Pid[:pidLogLength])
 	_, err = conn.client.ContainerStop(conn.ctx, de.state.Pid, client.ContainerStopOptions{})
