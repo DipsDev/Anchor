@@ -8,9 +8,11 @@ import (
 	"github.com/moby/moby/api/types/container"
 	"github.com/moby/moby/api/types/network"
 	"github.com/moby/moby/client"
+	"io"
 	"log/slog"
 	"math/rand"
 	"net/netip"
+	"os"
 	"strings"
 	"time"
 )
@@ -144,7 +146,8 @@ func (de DockerEngine) Start() (state.ServiceState, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = pullResponse.Wait(conn.ctx)
+	defer pullResponse.Close()
+	_, err = io.Copy(os.Stdout, pullResponse)
 	if err != nil {
 		return nil, err
 	}
