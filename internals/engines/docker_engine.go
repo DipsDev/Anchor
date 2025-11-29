@@ -16,6 +16,7 @@ import (
 )
 
 const containerWaitingTimeout = 30 * time.Second
+const pidLogLength = 8
 
 type DockerEngineConfig struct {
 	Image   string   `hcl:"image"`
@@ -117,13 +118,13 @@ func (de DockerEngine) Start() (state.ServiceState, error) {
 
 	// if the container is already created, just run it
 	if de.state.Pid != "" {
-		slog.Info("starting container", "id", de.state.Pid)
+		slog.Info("starting container", "id", de.state.Pid[:pidLogLength])
 		_, err = conn.client.ContainerStart(conn.ctx, de.state.Pid, client.ContainerStartOptions{})
 		if err != nil {
 			return nil, err
 		}
 
-		slog.Info("waiting for container to run", "id", de.state.Pid, "timeout", containerWaitingTimeout)
+		slog.Info("waiting for container to run", "id", de.state.Pid[:pidLogLength], "timeout", containerWaitingTimeout)
 		err = waitForContainer(conn, de.state.Pid, func(inspectResult client.ContainerInspectResult) bool {
 			return inspectResult.Container.State.Running
 		})
@@ -191,13 +192,13 @@ func (de DockerEngine) Stop() (state.ServiceState, error) {
 	}
 	defer conn.client.Close()
 
-	slog.Info("stopping docker container", "id", de.state.Pid)
+	slog.Info("stopping docker container", "id", de.state.Pid[:pidLogLength])
 	_, err = conn.client.ContainerStop(conn.ctx, de.state.Pid, client.ContainerStopOptions{})
 	if err != nil {
 		return nil, err
 	}
 
-	slog.Info("waiting for container to stop", "id", de.state.Pid, "timeout", containerWaitingTimeout)
+	slog.Info("waiting for container to stop", "id", de.state.Pid[:pidLogLength], "timeout", containerWaitingTimeout)
 	err = waitForContainer(conn, de.state.Pid, func(inspectResult client.ContainerInspectResult) bool {
 		return !inspectResult.Container.State.Running
 	})
