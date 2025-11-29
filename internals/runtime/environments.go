@@ -128,7 +128,7 @@ func getEnvironmentExecutionOrder(env config.EnvironmentConfig) ([]config.Servic
 	}
 
 	if len(res) != len(env.Services) {
-		return res, fmt.Errorf("environment %s has bad dependencies, please check the `depends_on` attribute for typos and mismatches", env.Name)
+		return res, fmt.Errorf("environment %s has circular-dependencies, please check the `depends_on` attribute for typos and mismatches", env.Name)
 	}
 
 	return res, nil

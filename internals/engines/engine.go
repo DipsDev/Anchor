@@ -24,6 +24,11 @@ var engines = map[string]engineDefinition{
 		configFactory: func() config.EngineConfig { return &DockerEngineConfig{} },
 		stateFactory:  createDefaultDockerState,
 	},
+	"shell": {
+		engineFactory: newShellEngine,
+		configFactory: func() config.EngineConfig { return &ShellEngineConfig{} },
+		stateFactory:  createDefaultShellState,
+	},
 }
 
 func Create(engineType string, serviceConfig config.ServiceConfig, config config.EngineConfig, state state.ServiceState) (Engine, error) {
