@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"github.com/spf13/cobra"
 	"os"
 )
@@ -12,9 +11,12 @@ var rootCmd = &cobra.Command{
 	Long:  "A powerful workflow tool built to impower you dev experience.",
 }
 
+func init() {
+	rootCmd.AddCommand(envStartCmd)
+}
+
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
 		os.Exit(1)
 	}
 }
