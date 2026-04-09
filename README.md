@@ -22,7 +22,7 @@ Anchor uses a single configuration file paired with a powerful CLI tool, in orde
 
 ### Configuration File
 
-Create a file named `Anchorfile` in the root of your project. This file specifies **where** and **how** to deploy.
+Create a file named `Anchorfile` in the root of your project. This file specifies **what** and **when** to deploy.
 It uses a [HCLv2](https://github.com/hashicorp/hcl) syntax, which provides a robust way to configure environments.
 
 ### Environments
@@ -87,7 +87,7 @@ service "generic-service" {
 
 ### Complete Example
 
-This example features a fully-written Anchorfile. The file specifies a dev environment for fullstack website.
+This example features a fully-written `Anchorfile`. The file specifies a dev environment for fullstack website.
 ```hcl
 environment "dev" {
     description = "Starts backend, frontend and a mysql database"
