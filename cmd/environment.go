@@ -28,7 +28,7 @@ var envStartCmd = &cobra.Command{
 		}
 
 		r := runtime.New(config)
-		return r.Start(args[0])
+		return r.StartEnvironment(args[0])
 
 	},
 }

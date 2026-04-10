@@ -17,7 +17,7 @@ func New(config *parser.RootConfig) *Runtime {
 	}
 }
 
-func (r *Runtime) Start(targetEnv string) error {
+func (r *Runtime) StartEnvironment(targetEnv string) error {
 	env := r.config.GetEnvironment(targetEnv)
 	if env == nil {
 		return fmt.Errorf("couldn't start environment, environment '%s' not found", targetEnv)
