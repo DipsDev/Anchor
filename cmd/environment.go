@@ -3,16 +3,25 @@ package cmd
 import (
 	"anchor/internals/parser"
 	"anchor/internals/runtime"
+	"errors"
 	"fmt"
 	"github.com/spf13/cobra"
 	"os"
 	"path/filepath"
 )
 
+func validateEnvironmentArgs(cmd *cobra.Command, args []string) error {
+	if len(args) < 1 {
+		return errors.New("you must specify an environment name")
+	}
+
+	return nil
+}
+
 var envStartCmd = &cobra.Command{
 	Use:   "start <environment>",
 	Short: "Start an environment",
-	Args:  cobra.ExactArgs(1),
+	Args:  validateEnvironmentArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		currDir, err := os.Getwd()
 		if err != nil {

@@ -4,6 +4,8 @@ import (
 	"anchor/internals/parser"
 	"fmt"
 	"github.com/briandowns/spinner"
+	"os/exec"
+	"strings"
 	"time"
 )
 
@@ -20,7 +22,7 @@ func New(config *parser.RootConfig) *Runtime {
 func (r *Runtime) StartEnvironment(targetEnv string) error {
 	env := r.config.GetEnvironment(targetEnv)
 	if env == nil {
-		return fmt.Errorf("couldn't start environment, environment '%s' not found", targetEnv)
+		return fmt.Errorf("environment '%s' not found", targetEnv)
 	}
 
 	for _, task := range env.Tasks {
@@ -28,7 +30,19 @@ func (r *Runtime) StartEnvironment(targetEnv string) error {
 		_ = s.Color("gray")
 		s.Suffix = " Starting task " + task.Name
 		s.Start()
-		time.Sleep(4 * time.Second)
+
+		args := strings.Split(task.Exec, " ")
+		cmd := exec.Command(args[0], args[1:]...)
+		err := cmd.Start()
+		if err != nil {
+			return err
+		}
+
+		err = cmd.Wait()
+		if err != nil {
+			return err
+		}
+
 		s.Stop()
 		fmt.Println("Started task " + task.Name)
 	}
