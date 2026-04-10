@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"anchor/internals/parser"
+	"anchor/internals/runtime"
 	"fmt"
 	"github.com/spf13/cobra"
 	"os"
@@ -21,12 +22,13 @@ var envStartCmd = &cobra.Command{
 		configFile := filepath.Join(currDir, "Anchorfile")
 		parser := parser.New()
 
-		_, err = parser.ParseFile(configFile)
+		config, err := parser.ParseFile(configFile)
 		if err != nil {
 			return fmt.Errorf("parsing Anchorfile failed: %v", err)
 		}
 
-		return nil
+		r := runtime.New(config)
+		return r.Start(args[0])
 
 	},
 }

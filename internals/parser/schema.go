@@ -6,6 +6,15 @@ type RootConfig struct {
 	Environments []EnvironmentDecl `hcl:"environment,block"`
 }
 
+func (r *RootConfig) GetEnvironment(envName string) *EnvironmentDecl {
+	for _, e := range r.Environments {
+		if e.Name == envName {
+			return &e
+		}
+	}
+	return nil
+}
+
 type EnvironmentDecl struct {
 	Name        string `hcl:"name,label"`
 	Description string `hcl:"description,optional"`
