@@ -21,8 +21,20 @@ func (r *Runtime) StartEnvironment(targetEnv string) error {
 		return fmt.Errorf("environment '%s' not found", targetEnv)
 	}
 
-	for _, task := range env.Tasks {
-		if err := r.runTask(task); err != nil {
+	runnables := make([]parser.Runnable, 0)
+
+	for _, t := range env.Tasks {
+		runnables = append(runnables, &t)
+	}
+
+	execOrder, err := resolveExecutionOrder(runnables)
+	if err != nil {
+		return err
+	}
+
+	for _, runnableName := range execOrder {
+		runnable := env.FindRunnable(runnableName)
+		if err := r.run(runnable); err != nil {
 			return err
 		}
 	}
